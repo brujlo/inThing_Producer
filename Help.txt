@@ -1,0 +1,87 @@
+create table inthing.activities(
+    id INT GENERATED ALWAYS AS IDENTITY,
+    activity VARCHAR NOT NULL,
+	type VARCHAR NULL,
+	participants INTEGER NULL,
+	price float8 not NULL,
+	link VARCHAR NULL,
+	key VARCHAR NULL,
+	accessibility DOUBLE PRECISION
+);
+
+"Host=localhost;Username=posgres;Password=posgres;Database=inthing"
+
+
+INSERT INTO inthing.activities(activity, type, participants, price, link, key, accessibility)
+VALUES ('Learn the NATO phonetic alphabet', 'education', 1, 0, 'https://en.wikipedia.org/wiki/NATO_phonetic_alphabet', '6706598', 0)
+
+
+SELECT inthing.get_activities(
+	3, 
+	0.1
+)
+
+
+CREATE OR REPLACE FUNCTION inthing.get_activities(
+	p1 integer,
+	p2 double precision)
+    RETURNS TABLE(
+		id integer, 
+		activity character varying, 
+		type character varying, 
+		participants integer, 
+		price double precision, 
+		link character varying, 
+		key character varying, 
+		accessibility double precision) 
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE PARALLEL UNSAFE
+    ROWS 1000
+
+AS $BODY$
+begin
+  IF p1 is null OR p2 is null THEN
+    RAISE EXCEPTION 'input cannot be null';
+  END IF;
+  return query
+  select * from inthing.activities
+	where inthing.activities.participants > p1
+	and inthing.activities.accessibility > p2;
+end
+$BODY$;
+
+ALTER FUNCTION inthing.get_activities(integer, double precision)
+    OWNER TO postgres;
+
+
+
+
+
+
+
+
+select * from inthing.activities
+where participants > 3
+and accessibility > 0.5
+
+CREATE OR REPLACE PROCEDURE inthing.get_activities(p1 integer, p2 double precision)
+RETURNS inthing.activities
+ LANGUAGE plpgsql
+AS $procedure$
+BEGIN
+  IF p1 is null OR p2 is null THEN
+    RAISE EXCEPTION 'input cannot be null';
+  END IF;
+  select * from inthing.activities
+	where participants > p1
+	and accessibility > p2;
+END;
+$procedure$;
+
+
+
+-----ZADATAK-----
+select type, AVG(accessibility) as avgg from inthing.activities
+group by type order by avgg desc  LIMIT 1
+-----------------
